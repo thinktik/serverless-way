@@ -1,0 +1,7 @@
+node_modules
+.idea
+.sst
+.build
+.DS_Store
+# local env files
+.env*.local
