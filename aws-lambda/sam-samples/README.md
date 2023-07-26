@@ -6,4 +6,5 @@
 
 | Project                                | Description |
 |----------------------------------------|-------------|
+| [hello-world](./hello-world) | 安装AWS SAM并部署第一个AWS Lambda服务    |
 | [location-service](./location-service) | 终端设备模糊定位    |
