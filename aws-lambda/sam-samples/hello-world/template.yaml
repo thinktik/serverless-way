@@ -21,15 +21,9 @@ Resources:
       # 本次lambda函数的位置
       Handler: app.lambda_handler
       # 函数名称
-      FunctionName: hello_world
+      FunctionName: hello-world
       # 函数运行时(语言+版本)
       Runtime: python3.10
-      # lambda金丝雀发布
-      AutoPublishAlias: live
-      DeploymentPreference:
-        # 滚动类型
-        Type: Linear10PercentEvery1Minute
-
       # 运行时底层的CPU架构
       Architectures:
         - x86_64
