@@ -3,27 +3,46 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   hello-world
 
-  Sample SAM Template for hello-world
+  install AWS SAM and deploy the first aws lambda service
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
+    # 函数超时时间值
     Timeout: 3
 
 Resources:
   HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
+      # 代码的src文件夹路径
       CodeUri: hello_world/
+      # 本次lambda函数的位置
       Handler: app.lambda_handler
+      # 函数名称
+      FunctionName: hello_world
+      # 函数运行时(语言+版本)
       Runtime: python3.10
+      # lambda金丝雀发布
+      AutoPublishAlias: live
+      DeploymentPreference:
+        # 滚动类型
+        Type: Linear10PercentEvery1Minute
+
+      # 运行时底层的CPU架构
       Architectures:
         - x86_64
+      # 触发Lambda运行的Event集合
       Events:
+        # 第一个event，一个api-gateway event
         HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
+            # http request url path
             Path: /hello
+            # http request method
             Method: get
 
 Outputs:
