@@ -19,10 +19,10 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
-# 使用具体的S3桶
-s3_bucket = <your-bucket-name>
-# 使用具体的S3桶内路径
-s3_prefix = <your-bucket-prefix>
+## 使用具体的S3桶
+#s3_bucket = <your-bucket-name>
+## 使用具体的S3桶内路径
+#s3_prefix = <your-bucket-prefix>
 
 [default.package.parameters]
 resolve_s3 = true
