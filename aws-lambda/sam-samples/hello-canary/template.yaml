@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  hello-canary
+
+  AWS Lambda canary deploy demo
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # 代码的src文件夹路径
+      CodeUri: src/
+      # 本次lambda函数的位置
+      Handler: app.lambda_handler
+      # 函数名称
+      FunctionName: hello-canary
+      #
+      Description: AWS Lambda canary deploy demo
+      # 函数运行时(语言+版本)
+      Runtime: python3.10
+      # 运行时底层的CPU架构
+      Architectures:
+        - arm64
+      # canary部署: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/automating-updates-to-serverless-apps.html
+      # lambda 函数别名
+      AutoPublishAlias: live
+      DeploymentPreference:
+        # canary部署策略: 每分钟切换10%的流量到新的版本上
+        Type: Linear10PercentEvery1Minute
+      # 触发Lambda运行的Event集合
+      Events:
+        # 一个api-gateway event
+        HelloWorld:
+          Type: Api
+          Properties:
+            # http request url path
+            Path: /hello
+            # http request method
+            Method: get
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn
