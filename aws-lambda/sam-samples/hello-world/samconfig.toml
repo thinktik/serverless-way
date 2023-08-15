@@ -18,6 +18,7 @@ lint = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
+# 自动创建S3桶，如果没有指定具体的S3桶和桶内路径的话
 resolve_s3 = true
 ## 使用具体的S3桶
 #s3_bucket = <your-bucket-name>
