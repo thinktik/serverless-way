@@ -10,6 +10,27 @@ Globals:
     Timeout: 3
 
 Resources:
+  CanaryErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      # 创建一个aws cloudwatch告警，以60s为单位段，连续2个单位时间段内出现错误，就会触发告警
+      AlarmDescription: HelloWorldFunction canary errors
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Dimensions:
+        - Name: Resource
+          # 指定监控HelloWorldFunction的live别名
+          Value: !Sub "${HelloWorldFunction}:live"
+        - Name: FunctionName
+          Value: !Ref HelloWorldFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt HelloWorldFunction.Version.Version
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -32,6 +53,16 @@ Resources:
       DeploymentPreference:
         # canary部署策略: 每分钟切换10%的流量到新的版本上
         Type: Linear10PercentEvery1Minute
+        # 添加canary部署的告警监控，如果有错误立即回滚
+        Alarms:
+          - !Ref CanaryErrorsAlarm
+        # 前置/后置检查钩子
+        Hooks:
+          # Validation Lambda functions that are run before and after traffic shifting
+          # 前置检查
+          PreTraffic: !Ref PreTrafficLambdaFunction
+          # 后置检查
+          PostTraffic: !Ref PostTrafficLambdaFunction
       # 触发Lambda运行的Event集合
       Events:
         # 一个api-gateway event
