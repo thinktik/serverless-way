@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  s3-image-detection
+
+  S3 image detection by amazon rekognition
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  BatchingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "thinktik-lambda-trigger-bucket"
+  # https://stackoverflow.com/questions/61093736/aws-sam-template-issue-mapping-s3-events-to-lambda
+  LambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt S3ImageDetectionFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 's3.amazonaws.com'
+      SourceAccount: !Sub ${AWS::AccountId}
+      SourceArn: !GetAtt BatchingBucket.Arn
+  S3ImageDetectionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.lambda_handler
+      # 函数名称
+      FunctionName: s3-image-detection
+      Runtime: python3.10
+      Architectures:
+        - x86_64
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref BatchingBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: '.txt'
+Outputs:
+  S3ImageDetectionFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt S3ImageDetectionFunction.Arn
+  S3ImageDetectionFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt S3ImageDetectionFunctionRole.Arn
+  S3BucketArn:
+    Description: "S3 bucket Arn"
+    Value: !GetAtt BatchingBucket.Arn
