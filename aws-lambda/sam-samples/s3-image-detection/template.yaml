@@ -37,7 +37,8 @@ Resources:
         S3Event:
           Type: S3
           Properties:
-            Bucket: !Ref BatchingBucket
+            Bucket:
+              Ref: BatchingBucket
             Events: s3:ObjectCreated:*
             Filter:
               S3Key:
