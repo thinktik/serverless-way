@@ -12,6 +12,13 @@ Globals:
     Timeout: 3
 
 Resources:
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: [ HelloWorldFunction ]
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${HelloWorldFunction}
+      RetentionInDays: 7
+
   HelloWorldFunction:
     # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Type: AWS::Serverless::Function
