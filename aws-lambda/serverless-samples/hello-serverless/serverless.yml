@@ -1,0 +1,39 @@
+# https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
+# https://www.serverless.com/framework/docs/environment-variables/#support-for-env-files
+service: hello-serverless
+frameworkVersion: '3'
+useDotenv: true
+configValidationMode: error
+deprecationNotificationMode: warn:summary
+provider:
+  name: aws
+  stage: dev
+  runtime: python3.11
+  architecture: arm64
+  runtimeManagement: auto
+  logRetentionInDays: 7
+  lambdaHashingVersion: 20201221
+  deploymentPrefix: lambda-deploy/serverless
+  deploymentBucket:
+    name: thinktik-poc-devops
+    blockPublicAccess: true
+    maxPreviousDeploymentArtifacts: 8
+  iam:
+    role: ${env:iamRole}
+  vpc:
+    securityGroupIds:
+      - ${env:securityGroupId}
+    subnetIds:
+      - ${env:subnetId_1}
+      - ${env:subnetId_2}
+      - ${env:subnetId_3}
+  httpApi:
+    payload: '2.0'
+    id: ${env:apiGatewayId}
+functions:
+  hello:
+    handler: src/handler.hello
+    events:
+      - httpApi:
+          path: /
+          method: get
