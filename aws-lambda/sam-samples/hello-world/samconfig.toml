@@ -19,11 +19,11 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 # 自动创建S3桶，如果没有指定具体的S3桶和桶内路径的话
-resolve_s3 = true
+resolve_s3 = false
 ## 使用具体的S3桶
-#s3_bucket = <your-bucket-name>
+s3_bucket = "thinktik-poc-devops"
 ## 使用具体的S3桶内路径
-#s3_prefix = <your-bucket-prefix>
+s3_prefix = "lambda-deploy/sam-framework"
 
 [default.package.parameters]
 resolve_s3 = true

@@ -26,22 +26,23 @@ Resources:
       Role: "arn:aws:iam::843245141269:role/poc-lambda-role"
       VpcConfig:
         SecurityGroupIds:
-          - sg-0f535b902427074e7
+          - sg-0fedca35f5e05665d
         SubnetIds:
           - subnet-04fcf4683c6a14b4d
-#          - subnet-03f68e34e9d2f87f0
-#          - subnet-081ba9c36f1afbc3d
+          - subnet-03f68e34e9d2f87f0
+          - subnet-081ba9c36f1afbc3d
       # 代码的src文件夹路径
       CodeUri: hello_world/
       # 本次lambda函数的位置
       Handler: app.lambda_handler
       # 函数名称
       FunctionName: hello-world
+      Description: hello-world
       # 函数运行时(语言+版本)
-      Runtime: python3.11
+      Runtime: python3.12
       # 运行时底层的CPU架构
       Architectures:
-        - x86_64
+        - arm64
       # 触发Lambda运行的Event集合
       Events:
         # 第一个event，一个api-gateway event
@@ -53,19 +54,6 @@ Resources:
             Path: /hello
             # http request method
             Method: get
-        RabbitMQEvent:
-          Type: MQ
-          Properties:
-            BatchSize: 100
-            Broker: "arn:aws:mq:us-east-1:843245141269:broker:private-rbtmq:b-6609946e-0972-427b-a513-cc6d94a9d250"
-            DynamicPolicyName: true
-            Enabled: true
-            MaximumBatchingWindowInSeconds: 4
-            Queues:
-              - test-q
-            SourceAccessConfigurations:
-              - Type: BASIC_AUTH
-                URI: "arn:aws:secretsmanager:us-east-1:843245141269:secret:rab_1-fhIpSz"
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
