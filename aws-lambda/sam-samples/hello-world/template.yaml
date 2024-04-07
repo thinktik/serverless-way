@@ -39,7 +39,7 @@ Resources:
       Runtime: python3.12
       # 运行时底层的CPU架构，可以是x86_64或者arm64
       Architectures:
-        - arm64
+        - x86_64
       # 触发Lambda运行的Event集合
       Events:
         # 第一个event，它是一个api-gateway event

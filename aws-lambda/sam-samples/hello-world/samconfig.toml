@@ -10,7 +10,7 @@ stack_name = "hello-world"
 cached = true
 parallel = true
 # 使用容器环境构建项目
-use_container = true
+# use_container = true
 
 [default.validate.parameters]
 lint = true
