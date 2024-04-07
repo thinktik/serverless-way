@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  hello-canary
+
+  AWS Lambda canary deploy demo
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  CanaryErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      # 创建一个aws cloudwatch告警，以60s为单位段，连续2个单位时间段内出现错误，就会触发告警
+      AlarmDescription: HelloCanaryFunction canary errors
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Dimensions:
+        - Name: Resource
+          # 指定监控HelloCanaryFunction的live别名
+          Value: !Sub "${HelloCanaryFunction}:live"
+        - Name: FunctionName
+          Value: !Ref HelloCanaryFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt HelloCanaryFunction.Version.Version
+  HelloCanaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # 代码的src文件夹路径
+      CodeUri: src/
+      # 本次lambda函数的位置
+      Handler: app.lambda_handler
+      # 函数名称
+      FunctionName: hello-canary
+      # lambda函数描述
+      Description: AWS Lambda canary deploy demo
+      # 函数运行时(语言+版本)
+      Runtime: python3.12
+      # 运行时底层的CPU架构
+      Architectures:
+        - arm64
+      # lambda 函数别名
+      AutoPublishAlias: live
+      # canary部署: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/automating-updates-to-serverless-apps.html
+      DeploymentPreference:
+        # canary部署策略: 每分钟切换10%的流量到新的版本上
+        Type: Linear10PercentEvery1Minute
+        # 添加canary部署的告警监控，如果有错误立即回滚
+        Alarms:
+          - !Ref CanaryErrorsAlarm
+      #        # 前置/后置检查钩子
+      #        Hooks:
+      #          # Validation Lambda functions that are run before and after traffic shifting
+      #          # 前置检查
+      #          PreTraffic: !Ref PreTrafficLambdaFunction
+      #          # 后置检查
+      #          PostTraffic: !Ref PostTrafficLambdaFunction
+      # 触发Lambda运行的Event集合
+      Events:
+        # 一个api-gateway event
+        HelloCanary:
+          Type: Api
+          Properties:
+            # http request url path
+            Path: /hello
+            # http request method
+            Method: get
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloCanaryApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello Canary function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloCanaryFunction:
+    Description: "Hello Canary Lambda Function ARN"
+    Value: !GetAtt HelloCanaryFunction.Arn
+  HelloCanaryFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello Canary function"
+    Value: !GetAtt HelloCanaryFunctionRole.Arn
