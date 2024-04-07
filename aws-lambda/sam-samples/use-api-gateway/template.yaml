@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  use-api-gateway
+
+  set api-gateway for lambda
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    # 函数超时时间值
+    Timeout: 3
+    VpcConfig:
+      SecurityGroupIds:
+        - sg-0f535b902427074e7
+      SubnetIds:
+        - subnet-04fcf4683c6a14b4d
+        - subnet-03f68e34e9d2f87f0
+        - subnet-081ba9c36f1afbc3d
+    # 自动创建alias别名
+    AutoPublishAlias: live
+    # 函数运行时(语言+版本)
+    Runtime: python3.12
+    # 运行时底层的CPU架构，可选的值为x86_64或者arm64
+    Architectures:
+      - arm64
+
+Resources:
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: [ UseApiGatewayFunction1 ]
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${UseApiGatewayFunction1}
+      RetentionInDays: 7
+  # 创建api-gateway资源：https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-httpapi.html
+  FunctionApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Description: aws lambda's api gateway
+      Name: lambda-gateway
+      AlwaysDeploy: false
+      StageName: dev
+  # 第一个复用api-gateway的函数
+  UseApiGatewayFunction1:
+    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      Role: "arn:aws:iam::843245141269:role/poc-lambda-role"
+      # 代码的src文件夹路径
+      CodeUri: src/
+      # 本次lambda函数的位置
+      Handler: app_1.lambda_handler
+      # 函数名称
+      FunctionName: use-api-gateway-python-1
+      # 触发Lambda运行的Event集合
+      Events:
+        # 第一个event，一个api-gateway event
+        ApiEvent:
+          # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
+          Properties:
+            # 引用api-gateway资源的id
+            RestApiId:
+              Ref: FunctionApiGateway
+            # http request url path
+            Path: /hello/1
+            # http request method
+            Method: get
+  # 第二个复用api-gateway的函数
+  UseApiGatewayFunction2:
+    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      Role: "arn:aws:iam::843245141269:role/poc-lambda-role"
+      # 代码的src文件夹路径
+      CodeUri: src/
+      # 本次lambda函数的位置
+      Handler: app_2.lambda_handler
+      # 函数名称
+      FunctionName: use-api-gateway-python-2
+      # 触发Lambda运行的Event集合
+      Events:
+        # 第一个event，一个api-gateway event
+        ApiEvent:
+          # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
+          Properties:
+            # 引用api-gateway资源的id
+            RestApiId:
+              Ref: FunctionApiGateway
+            # http request url path
+            Path: /hello/2
+            # http request method
+            Method: get
+  # 第三个复用api-gateway的函数
+  UseApiGatewayFunction3:
+    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      Role: "arn:aws:iam::843245141269:role/poc-lambda-role"
+      # 代码的src文件夹路径
+      CodeUri: src/
+      # 本次lambda函数的位置
+      Handler: app_2.lambda_handler_3
+      # 函数名称
+      FunctionName: use-api-gateway-python-3
+      # 触发Lambda运行的Event集合
+      Events:
+        # 第一个event，一个api-gateway event
+        ApiEvent:
+          # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
+          Properties:
+            # 引用api-gateway资源的id
+            RestApiId:
+              Ref: FunctionApiGateway
+            # http request url path
+            Path: /hello/3
+            # http request method
+            Method: get
+Outputs:
+  #  FunctionApiGatewayUrl is an explicit API created out of Events key under Serverless::Function
+  FunctionApiGatewayUrl1:
+    Value: !Sub "https://${FunctionApiGateway}.execute-api.${AWS::Region}.amazonaws.com/dev/hello/1"
+  FunctionApiGatewayUrl2:
+    Value: !Sub "https://${FunctionApiGateway}.execute-api.${AWS::Region}.amazonaws.com/dev/hello/2"
+  FunctionApiGatewayUrl3:
+    Value: !Sub "https://${FunctionApiGateway}.execute-api.${AWS::Region}.amazonaws.com/dev/hello/3"
