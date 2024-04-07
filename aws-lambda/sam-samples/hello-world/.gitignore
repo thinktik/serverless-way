@@ -1,0 +1,4 @@
+# 排除IDE、操作系统临时文件等项目无关的文件
+.idea
+.DS_Store
+.aws-sam

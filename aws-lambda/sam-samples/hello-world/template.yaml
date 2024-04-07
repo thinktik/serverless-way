@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  hello-world
+
+  install AWS SAM and deploy the first aws lambda service
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    # 函数超时时间值
+    Timeout: 3
+
+Resources:
+  # 本次lambda函数的日志组
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    # 依赖本日志组设置的函数列表
+    DependsOn: [ HelloWorldFunction ]
+    Properties:
+      # 日志组名称
+      LogGroupName: !Sub /aws/lambda/${HelloWorldFunction}
+      # 日志组保留时间
+      RetentionInDays: 7
+
+  HelloWorldFunction:
+    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      # 代码的src文件夹路径
+      CodeUri: hello_world/
+      # 本次lambda函数的位置
+      Handler: app.lambda_handler
+      # 函数名称
+      FunctionName: hello-python
+      # 自动创建函数alias
+      AutoPublishAlias: live
+      # 函数运行时(语言+版本)
+      Runtime: python3.12
+      # 运行时底层的CPU架构，可以是x86_64或者arm64
+      Architectures:
+        - arm64
+      # 触发Lambda运行的Event集合
+      Events:
+        # 第一个event，它是一个api-gateway event
+        HelloWorld:
+          # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
+          Properties:
+            # http request url path
+            Path: /hello
+            # http request method
+            Method: get
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn
