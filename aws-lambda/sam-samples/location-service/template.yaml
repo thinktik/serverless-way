@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Location Service
+
+  Use Ip,Wifi,GNSS info to resolve client's position 
+
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+    Runtime: python3.12
+    Environment:
+      Variables:
+        service_name: location-service
+    Tracing: Active
+    Architectures:
+      - arm64
+  Api:
+    TracingEnabled: false
+
+Resources:
+  Ipv4Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ipv4_location
+      Role: "arn:aws:iam::843245141269:role/poc-lambda-role"
+      CodeUri: src/
+      Handler: ipv4.lambda_handler
+      Events:
+        IpV4:
+          Type: Api
+          Properties:
+            Path: /location/ipv4s/{ipv4-address}
+            Method: get
+  WiFiMacAddressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: wifi_mac_address_location
+      Role: "arn:aws:iam::843245141269:role/poc-lambda-role"
+      CodeUri: src/
+      Handler: wifi_mac_address.lambda_handler
+      Events:
+        IpV4:
+          Type: Api
+          Properties:
+            Path: /location/wifi-infos
+            Method: get
+  LocationOverMQTTFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: location_over_mqtt_location
+      Role: "arn:aws:iam::843245141269:role/poc-lambda-role"
+      CodeUri: src/
+      Handler: location_over_mqtt.lambda_handler
+      Events:
+        IoTRule:
+          Type: IoTRule
+          Properties:
+            AwsIotSqlVersion: "2016-03-23"
+            Sql: "SELECT * FROM '/test/location'"
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
+Outputs:
+  Ipv4Function:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/location/ipv4s/{ipv4-address}"
+  WiFiMacAddressFunction:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/location/wifi-infos"
